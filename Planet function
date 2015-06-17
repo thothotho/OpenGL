@@ -1,0 +1,338 @@
+#include <stdlib.h>
+#include <windows.h>
+#include <GL/glut.h>
+#include <math.h>
+#include <time.h>
+#include <stdio.h>
+#define PI 3.1415926535898
+#define ANIMATE 0
+float day = 180;
+#define R1 2.0
+#define R2 4.9
+int mode = ANIMATE;
+#define TRUE 1
+#define BYTE unsigned char
+
+int eyeX=0, eyeY=0, eyeZ=5, upX=0, upY=1, upZ=0;
+GLUquadricObj* disk;
+
+int LoadTextureRAW (const char * filename, int isWrap, int width, int height, int iTextures);
+void FreeTexture();
+const int numTextures = 4;					// total texture images
+GLuint	texture[numTextures];				// Storage Textures
+
+// list all texture images we want to use in the program here
+// Important: The size of the image has to be in the order of 2 (for example: 128 x 256 but not 125 x 300)
+
+void LoadGLTextures()
+{
+	LoadTextureRAW("c:/Data/sea.raw", TRUE, 512, 512, 0);
+	LoadTextureRAW("c:/Data/earth.raw", TRUE, 1024, 512, 1);
+	LoadTextureRAW("c:/Data/Moon.raw", TRUE, 256, 256, 2);
+	LoadTextureRAW("c:/Data/st1.raw", TRUE, 1024, 512, 3);
+}
+
+void init(void) 
+{
+	GLfloat white[] = { 1.0, 1.0, 1.0, 1.0 };
+	LoadGLTextures();
+
+	glEnable(GL_BLEND);
+	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glClearColor (0.0, 0.0, 0.0, 0.0);
+	disk = gluNewQuadric();
+	gluQuadricDrawStyle(disk, GLU_FILL);
+
+	glMaterialfv(GL_FRONT, GL_SPECULAR, white);		// highlight color
+	glMaterialf(GL_FRONT, GL_SHININESS, 20);	
+
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
+	glLightModelf(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+
+	glEnable(GL_COLOR_MATERIAL);	// the material color will track the value of the current color
+	glEnable(GL_DEPTH_TEST);		// Enables Depth Testing
+	glDepthFunc(GL_LESS);			// The Type Of Depth Test To Do
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);	// Really Nice Perspective Calculations
+}
+
+void circle(int x, int y, float r)
+{
+	int i, circle_points = 100;
+	float angle;
+
+	glBegin(GL_LINE_STRIP);
+	for (i = 0; i <= circle_points; i++) {
+		angle = 2 * PI*i / circle_points;
+		glVertex2f(x + r*cos(angle), y + r*sin(angle));
+	}
+	glEnd();
+}
+
+void display(void)
+{
+	GLfloat light_position[] = { 0.0, 0.0, 0.0, 1.0 };
+	GLfloat red_emission[] = { 1.0, 0.0, 0.0, 1.0 };
+	GLfloat mat_emission[] = { 1.0, 0.0, 0.0, 1.0 };
+	GLfloat mat_white[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat mat_noemis[] = { 0.0, 0.0, 0.0, 1.0 };
+
+
+   // 1 year = 720 days
+   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glPushMatrix();
+   GLUquadricObj *pObj = gluNewQuadric();				// Get a new Quadric off the stack
+   gluQuadricTexture(pObj, true);						// This turns on texture coordinates for our Quadrics
+
+
+   // The camera is at (eyeX, eyeY, eyeZ) looking at (0,0,0). The north direction of the camera is the vector upX, upY, upZ
+   gluLookAt (eyeX, eyeY, eyeZ, 0.0, 0.0, 0.0, upX, upY, upZ); 
+   
+   // draw each planet's orbital trail
+	glPushMatrix();
+	glRotatef(-90, 1, 0, 0);
+	glPushMatrix();
+	glColor3f(1.0, 1, 1);	// earth's color
+	circle(0, 0, R1);
+	glPopMatrix();
+
+		glPopMatrix();
+   // sun
+   glPushMatrix();
+		glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+		glMaterialfv(GL_FRONT, GL_EMISSION, red_emission);
+		glRotatef ((GLfloat) day*2, 0.0, 1.0, 0.0);  // sun rotate around itself
+		glRotatef(90, 1, 0, 0); 
+		glEnable(GL_TEXTURE_2D);	
+		glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+		glColor3f (1.0, 1.0, 1.0);	
+		glBindTexture(GL_TEXTURE_2D, texture[0]);
+		gluSphere(pObj, 0.8f, 40, 40);				 // sun 
+		glDisable(GL_TEXTURE_2D);
+
+   glPopMatrix();
+     
+
+   //Rino planet+earth
+	glRotatef ((GLfloat) day*2, 0.0, 1.0, 0.0);  // rotate around the sun
+	glTranslatef (2.0, 0.0, 0.0);	// move away from the sun
+	glPushMatrix();
+			glRotatef ((GLfloat) day*24, 0.0, 1.0, 0.0); // rotate around itself 
+			glRotatef(90, 1, 0, 0); 
+			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_noemis);
+			glEnable(GL_TEXTURE_2D);	
+			glBindTexture(GL_TEXTURE_2D, texture[1]);
+			gluSphere(pObj, 0.3f, 30, 30);			// earth
+			glDisable(GL_TEXTURE_2D);
+
+
+				glPushMatrix();
+				glRotatef ((GLfloat) day*30, 1.0, 0, 0.0); // rotate around earth
+				glTranslatef (0.6, 0.0, 0.0);
+				glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_noemis);
+				glEnable(GL_TEXTURE_2D);	
+				glBindTexture(GL_TEXTURE_2D, texture[2]);
+				gluSphere(pObj, 0.15f, 30, 30);			// moon
+				glDisable(GL_TEXTURE_2D);
+				glPopMatrix();
+
+		glPushMatrix();
+		glRotatef ((GLfloat) day*30, 1.0, 0, 0.0); // rotate around earth
+		glTranslatef (-0.6, 0.0, 0.0);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_noemis);
+		glEnable(GL_TEXTURE_2D);	
+		glBindTexture(GL_TEXTURE_2D, texture[2]);
+		gluSphere(pObj, 0.15f, 30, 30);			// moon
+		glDisable(GL_TEXTURE_2D);
+		glPopMatrix();
+
+	glPopMatrix();
+
+
+   // planet 2 : something
+
+glPushMatrix();
+glRotatef ((GLfloat) day*2, 0.0, 1.0, 0.0); // rotate around the sun
+glTranslatef (2.0, 0.0, 0.0);
+// the earth rotate around itself within 30 days 
+// therefore, 1 day = 12 degree
+		glPushMatrix();
+
+		glDepthMask(GL_FALSE);
+		glRotatef ((GLfloat) day*24, 1.0, 1.0, 0.0); 
+		glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+		glColor4f (0.0, 0.4, 0.8, 0.4); 
+		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_noemis);
+		glutSolidSphere(0.3, 25, 25); // draw blue earth
+		glDepthMask(GL_TRUE);
+		glPopMatrix();
+
+		glPushMatrix();
+		glRotatef ((GLfloat) day*30, 0.0, 1.0, 0.0); // rotate around earth
+		glTranslatef (0.6, 0.0, 0.0);
+		glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+		glColor3f (0.0, 0.8, 0.4);				  
+		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_noemis);
+		glutSolidSphere(0.15, 25, 25); // draw green moon 
+		glPopMatrix();
+
+		glPushMatrix();
+		glRotatef ((GLfloat) day*30, 0.0, 0.0, 1.0); // rotate around earth
+		glTranslatef (0.8, 0.0, 0.0);
+		glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+		glColor3f (0.0, 0.2, 0.3); 
+		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_noemis);
+		glutSolidSphere(0.15, 25, 25); // draw
+		glPopMatrix();
+glPopMatrix();
+
+   // planet 2 : saturn
+   glPushMatrix();
+		glRotatef ((GLfloat) day, 0.0, 1.0, 0.0);  // rotate around the sun
+		glTranslatef (-3.0, 0.0, 0.0);
+		glColor3f (0.8, 0.7, 0.5);		
+		
+		glPushMatrix();
+			glRotatef ((GLfloat) day*20, 1.0, 1.0, 0.0);
+			glEnable(GL_TEXTURE_2D);	
+			glBindTexture(GL_TEXTURE_2D, texture[3]);
+			gluSphere(pObj, 0.2f, 30, 30);			// saturn
+			glDisable(GL_TEXTURE_2D);
+		glPopMatrix();
+		
+		glPushMatrix();
+		glRotatef ((GLfloat) day*20, 1.0, 1.0, 0.0); 
+		glRotatef (20, 1.0, 0.0, 0.0);   
+		glEnable(GL_TEXTURE_2D);	
+		glBindTexture(GL_TEXTURE_2D, texture[3]);
+		glColor3f (0.9, 0.1, 0.1);	
+		gluDisk(disk, 0.45, 0.55, 20, 5);		// draw 1st saturn's ring
+		glDisable(GL_TEXTURE_2D);
+			glPushMatrix();
+			glRotatef ((GLfloat) day*20, 1.0, 1.0, 0.0); 
+			glRotatef (20, 1.0, 0.0, 0.0);   
+			glEnable(GL_TEXTURE_2D);	
+			glBindTexture(GL_TEXTURE_2D, texture[3]);
+			glColor3f (0.2, 0.8, 0.6);	
+			gluDisk(disk, 0.25, 0.35, 20, 5);		// draw 2nd saturn's ring
+			glDisable(GL_TEXTURE_2D);
+			glPopMatrix();
+		
+		glPopMatrix();
+
+
+   glPopMatrix();
+
+
+
+
+
+
+   glPopMatrix();
+   glutSwapBuffers();
+}
+
+void idle()
+{
+	if (mode == ANIMATE) {
+		day+=0.01;
+		if (day > 720)
+			day = 0;
+		glutPostRedisplay();
+	}
+}
+
+void reshape (int w, int h)
+{
+   glViewport (0, 0, (GLsizei) w, (GLsizei) h); 
+   glMatrixMode (GL_PROJECTION);
+   glLoadIdentity ();
+   gluPerspective(80.0, (GLfloat) w/(GLfloat) h, 1.0, 20.0);
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+}
+
+void keyboard (unsigned char key, int x, int y)
+{
+   switch (key) {
+	  case 't': eyeX=0; eyeY=5; eyeZ=0; upX=-1; upY=0; upZ=0;	// top view
+			    printf("top view ");
+				glutPostRedisplay(); break;
+	  case 'f': eyeX=0; eyeY=0; eyeZ=5; upX=0; upY=1; upZ=0;	// front view
+				printf("front view ");
+				glutPostRedisplay(); break;
+	  case 's': eyeX=5; eyeY=0; eyeZ=0; upX=0; upY=1; upZ=0;	// side view
+		  		printf("side view ");
+				glutPostRedisplay(); break;
+	  case 27:  exit(0); break;
+      default:  mode = 1 - mode;   break;
+   }
+}
+
+int main(int argc, char** argv)
+{
+   glutInit(&argc, argv);
+   glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+   glutInitWindowSize (500, 500); 
+   glutInitWindowPosition (100, 100);
+   glutCreateWindow ("planet");
+   init ();
+   glutDisplayFunc(display); 
+   glutIdleFunc(idle);
+   glutReshapeFunc(reshape);
+   glutKeyboardFunc(keyboard);
+   glutMainLoop();
+   return 0;
+}
+
+
+int LoadTextureRAW (const char * filename, int isWrap, int width, int height, int iTextures)
+{
+    BYTE * data;
+    FILE * file;
+
+    file = fopen( filename, "rb" );				// open texture data
+    if ( file == NULL ) 
+		return 0;
+	data = (BYTE *) malloc(width * height * 3); // allocate buffer
+    fread( data, width * height * 3, 1, file ); // read texture data
+    fclose(file);
+
+    glGenTextures( 1, &texture[iTextures] );	// allocate a texture name
+
+    // select our current texture
+    glBindTexture( GL_TEXTURE_2D, texture[iTextures] );
+
+    // select modulate to mix texture with the color of the object
+	glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+
+    // when texture area is small, bilinear filter the closest mipmap
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST );
+    // when texture area is large, bilinear filter the first mipmap
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+
+    // if wrap is true, the texture wraps over at the edges (repeat)
+    //       ... false, the texture ends at the edges (clamp)
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                     isWrap ? GL_REPEAT : GL_CLAMP );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                     isWrap ? GL_REPEAT : GL_CLAMP );
+
+    // build our texture mipmaps
+    gluBuild2DMipmaps( GL_TEXTURE_2D, 3, width, height,
+                       GL_RGB, GL_UNSIGNED_BYTE, data );
+
+    // free buffer
+    free( data );
+
+    return iTextures;
+}
+
+void FreeTexture()
+{
+	int i;
+	for (i=0; i<numTextures; i++)
+		glDeleteTextures( 1, &texture[i] );
+}
