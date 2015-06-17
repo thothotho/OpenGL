@@ -1,0 +1,342 @@
+#include <GL/glut.h> 
+#include <math.h>
+#define PI 3.1415926535898
+float DEGTORAD = PI/180.0;
+
+int ww=800; int hh=800;
+
+float WIDTH = ww, HEIGHT = hh;
+
+// 4 control points for Bezier Curves (4 yellow dots you see) The Bezier curve is the red curve
+// adjust the shape of the curve by adjusting these 4 points
+GLfloat ctrlpoints[4][3] = { {215, 180, 0}, {338, 50, 0}, {461, 50, 0}, {584, 180, 0} };
+
+// draw an arc with center at (centerx, centery) and radius. The arc starts from the startAngle and stop and the endAngle
+void arc (float centerx, float centery, float radius, float startAngle, float endAngle)
+{
+	float i;
+
+	glBegin(GL_TRIANGLE_FAN);
+		for (i = startAngle; i <= endAngle; i += 1)
+			glVertex2f(centerx + cos(DEGTORAD * i) * radius, centery + sin(DEGTORAD * i) * radius);
+	glEnd();
+}
+
+void arc1 (float centerx, float centery, float radius, float startAngle, float endAngle)
+{
+	float i;
+
+	glBegin(GL_LINE_STRIP);
+		for (i = startAngle; i <= endAngle; i += 1)
+			glVertex2f(centerx + cos(DEGTORAD * i) * radius, centery + sin(DEGTORAD * i) * radius);
+	glEnd();
+}
+
+void Display(void) 
+{ 
+	float angle, j, startAngle, endAngle;
+	int i, circle_points = 100; 
+	int x0 = 400, y0 = 480, r0 = 315; 
+	int x1 = 400, y1 = 630, r1 = 150; 
+	int x2 = 325, y2 = 270, rx2 = 22, ry2 = 55; // it will be left eye. oval center at (x2, y2) radius rx2 and ry2
+	int x3 = 475, y3 = 270, rx3 = 22, ry3 = 55; // it will be right eye. oval center at (x3, y3) radius rx3 and ry3
+	int x4 = 475, y4 = 270, rx4 = 22, ry4 = 55; // it will be right eye. oval center at (x3, y3) radius rx3 and ry3
+
+	glClearColor(0.2, 0.9, 0.3, 0.0); // set background color R, G, B (ignore the 4th value for now)
+	glClear(GL_COLOR_BUFFER_BIT);	// clear screen
+
+	glLineWidth(5.0);
+	glColor3f(0.3, 1, 0.7);
+	glBegin(GL_POLYGON);
+	
+
+		glVertex2f(800, 0);
+		glVertex2f(800, 0);
+		glVertex2f(800, 100);
+		glVertex2f(700, 0);
+		glVertex2f(800, 200);
+		glVertex2f(600, 0);
+		glVertex2f(800, 300);
+		glVertex2f(500, 0);
+		glVertex2f(800, 400);
+		glVertex2f(400, 0);
+		glVertex2f(800, 500);
+		glVertex2f(300, 0);
+		glVertex2f(800, 600);
+		glVertex2f(200, 0);
+		glVertex2f(800, 700);
+		glVertex2f(100, 0);
+		glVertex2f(800, 800);
+		glVertex2f(0, 0);
+		glEnd();
+		glBegin(GL_LINES);
+		glVertex2f(700, 800);
+		glVertex2f(0, 100);
+		glVertex2f(600, 800);
+		glVertex2f(0, 200);
+		glVertex2f(500, 800);
+		glVertex2f(0, 300);
+		glVertex2f(400, 800);
+		glVertex2f(0, 400);
+		glVertex2f(300, 800);
+		glVertex2f(0, 500);
+		glVertex2f(200, 800);
+		glVertex2f(0, 600);
+		glVertex2f(100, 800);
+		glVertex2f(0, 700);
+	glEnd();
+	
+	glColor3f(0.2, 0.9, 0.3);
+	glBegin(GL_LINES);
+	glVertex2f(100, 0);
+	glVertex2f(100,100);
+	glVertex2f(200, 0);
+	glVertex2f(200,200);
+	glVertex2f(300, 0);
+	glVertex2f(300,300);
+	glVertex2f(400, 0);
+	glVertex2f(400,400);
+	glVertex2f(500, 0);
+	glVertex2f(500,500);
+	glVertex2f(600, 0);
+	glVertex2f(600,600);
+	glVertex2f(700,700);
+	glVertex2f(700, 0);
+	glVertex2f(800,800);
+	glVertex2f(800, 0);
+		glEnd();
+
+
+	glColor3f(0, 0, 0);
+	glRasterPos2f(50, 30);
+	glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24,'R'); 
+	glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24,'i'); 
+	glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24,'n'); 
+	glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24,'o'); 
+
+	//draw big circle line 
+	glColor3f(0, 0, 0); 
+	glBegin(GL_POLYGON); 
+		for (i=0; i < circle_points; i++) { 
+			angle = 2*PI*i/circle_points; 
+			glVertex2f(x0 + ((r0+10) * cos(angle)), y0 + ((r0+10) * sin(angle))); 
+		} 
+	glEnd();
+
+	//draw big circle 
+	glColor3f(1, 0, 0); 
+	glBegin(GL_POLYGON); 
+	for (i=0; i < circle_points; i++) { 
+		angle = 2*PI*i/circle_points; 
+		glVertex2f(x0 + (r0 * cos(angle)), y0 + (r0 * sin(angle))); 
+	} 
+	glEnd();
+
+	// draw a white circle line 
+	glColor3f(0, 0, 0); 
+	glLineWidth(10); 
+	glBegin(GL_LINE_LOOP); 
+		for (i=0; i < circle_points; i++) { 
+			angle = 2*PI*i/circle_points; 
+			glVertex2f(x1 + (r1 * cos(angle)), y1 + (r1 * sin(angle))); 
+		} 
+	glEnd();
+
+	// draw a white circle radius r1, centered at x1, y1 
+	glColor3f(1, 1, 1); 
+	glBegin(GL_POLYGON); 
+		for (i=0; i < circle_points; i++) { 
+			angle = 2*PI*i/circle_points; 
+			glVertex2f(x1 + (r1 * cos(angle)), y1 + (r1 * sin(angle))); 
+		} 
+	glEnd();
+
+
+	//arc left one
+	glColor3f(0, 0, 0); //black line
+	arc(80, 450, 116, -71, 82);
+
+	glColor3f(1, 1, 1);
+	arc(80, 450, 110, -71, 82);	// center(x,y) radius, starting angle, ending angle
+
+	glColor3f(1, 1, 1);			
+	glPushMatrix();
+	glTranslatef(401.6, 480, 0);  
+	glRotatef(190.7, 0, 0, 1);	
+	glTranslatef(-399.6, -480, 0); 
+	arc(395.8, 480, 320, -25, 15); 
+	                             
+	glPopMatrix();
+
+
+//arc right one
+	glColor3f(0, 0, 0); //black line
+	arc(721, 450, 116, 98, 251);
+	glColor3f(1, 1, 1); 
+    arc(721, 450, 110, 98, 251);
+	glColor3f(1, 1, 1);				// blue
+	arc(400, 480, 315, -25, 15); // use the big circle, since it's easiest to set the arc to fit it
+
+
+	glColor3f(0, 0, 0); 
+	arc(400, 92, 315, 53.27, 127.3);
+
+	glColor3f(1, 0.7, 0.5);
+	arc(400, 80, 320, 55, 125);
+
+	glColor3f(1, 0.7, 0.5);
+	glBegin(GL_POLYGON);
+		glVertex2f(215, 180);
+		glVertex2f(215, 344);
+		glVertex2f(584, 344);
+		glVertex2f(584, 180);
+	glEnd();
+
+	glBegin(GL_POLYGON);
+		for (i = 0; i <= 30; i++) 
+			glEvalCoord1f((GLfloat) i/30.0);
+	glEnd();
+
+	// line of face
+	glColor3f(0, 0, 0); 
+	glLineWidth(10); 
+	glBegin(GL_LINES);
+		glVertex2f(215, 344);
+		glVertex2f(215, 180);
+		glVertex2f(584, 180);
+		glVertex2f(584, 344);
+	glEnd();
+
+	//Eyes
+	startAngle = -90, endAngle = 270;
+	glColor3f(0, 0, 0);
+	glBegin(GL_TRIANGLE_FAN); 
+		for (j = startAngle; j <= endAngle; j += 1) {
+			glVertex2f(x2 + cos(DEGTORAD * j) * rx2, y2 + sin(DEGTORAD * j) * ry2);
+			glColor3f(0.7, 0.7, 0.7);
+			//glColor3f(1, 0.1, 0.3);
+	}			
+	glEnd();
+
+	glColor3f(0, 0, 0);
+	startAngle = -90, endAngle = 270;
+	glBegin(GL_TRIANGLE_FAN); 
+		for (j = startAngle; j <= endAngle; j += 1) {
+			glVertex2f(x3 + cos(DEGTORAD * j) * rx3, y3 + sin(DEGTORAD * j) * ry3);
+			glColor3f(0.6, 0.6, 0.6);
+			//glColor3f(1, 0.1, 0.3);
+	}			
+	glEnd();
+
+	//Mouth
+	glColor3f(0, 0, 0); 
+	glLineWidth(10); 
+	arc1(400, 230, 100, 210, 330);	// Hope you can have a bit of smile
+	glPointSize(5.0);
+
+	// Draw Bezier curve
+	glColor3f(0, 0, 0);
+	glBegin(GL_LINE_STRIP);
+		for (i = 0; i <= 30; i++) 
+			glEvalCoord1f((GLfloat) i/30.0);
+	glEnd();
+
+	glFlush();
+}
+
+void reshape(GLsizei w, GLsizei h)
+{
+	float ar_origin = (float) ww/ (float) hh;
+	float ar_new = (float) w/ (float) h;
+
+	if (ar_origin == ar_new)
+		return;
+
+	glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+	if (ar_origin == 1) {			// square
+		if (ar_new == 1) {
+			glOrtho(0, ww, 0, ww, 0, 1);
+			WIDTH = ww;
+			HEIGHT = ww;
+		}
+		else if (ar_new < 1) {
+			glOrtho(0, ww, 0, (float) ww*h/w, 0, 1);
+			WIDTH = ww;
+			HEIGHT = (float) ww*h/w;
+		}
+		else if (ar_new > 1) {
+			glOrtho(0, (float) hh*w/h, 0, hh, 0, 1);
+			WIDTH = (float) hh*w/h;
+			HEIGHT = hh;
+		}
+	}
+	else if (ar_origin < 1) {		// width is less than height
+		if (ar_new == 1) {
+			glOrtho(0, (float) hh*w/h, 0, hh, 0, 1);
+			WIDTH = (float) hh*w/h;
+			HEIGHT = hh;
+		}
+		else if (ar_new < 1) {
+			glOrtho(0, ww, 0, (float) (h/w)*ww, 0, 1);
+			WIDTH = ww;
+			HEIGHT = (float) (h/w)*ww;
+		}
+		else if (ar_new > 1) {
+			glOrtho(0, (float) w*(hh/h), 0, hh, 0, 1);
+			WIDTH = (float) w*(hh/h);
+			HEIGHT = hh;
+		}
+	}
+	else if (ar_origin > 1) {
+		if (ar_new == 1) {
+			glOrtho(0, ww, 0, (float) ww*h/w, 0, 1);
+			WIDTH = ww;
+			HEIGHT = (float) ww*h/w;
+		}
+		else if (ar_new < 1) {
+			glOrtho(0, ww, 0, (float) ww*h/w, 0, 1);
+			WIDTH = 2500;
+			HEIGHT = 2500.0*h/w;
+		}
+		else if (ar_new > 1) {
+			glOrtho(0, (float) w*hh/h, 0, hh, 0, 1);
+			WIDTH = (float) w*hh/h;
+			HEIGHT = hh;
+		}
+	}
+	glMatrixMode(GL_MODELVIEW);	
+	glViewport(0, 0, w, h);
+}
+
+void init() 
+{ 
+	glClearColor(1.0, 1.0, 1.0, 0.0); 
+	glMatrixMode(GL_PROJECTION); 
+	glLoadIdentity(); 
+	gluOrtho2D(0.0, ww, 0.0, hh); 
+	glMatrixMode(GL_MODELVIEW); 
+
+	glEnable (GL_LINE_SMOOTH); 
+	glEnable (GL_BLEND); 
+	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
+	glHint (GL_LINE_SMOOTH_HINT, GL_NICEST);
+
+	// init Bezier curve
+	glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, &ctrlpoints[0][0]);
+	glEnable(GL_MAP1_VERTEX_3);
+}
+
+int main(int argc, char* argv[])
+{ 
+	glutInit(&argc, argv); 
+	glutInitDisplayMode( GLUT_SINGLE | GLUT_RGB ); 
+	glutInitWindowSize(ww, hh); 
+	glutInitWindowPosition( 0, 0); 
+	glutCreateWindow("Rino"); 
+	glutDisplayFunc(Display); 
+	glutReshapeFunc(reshape); 
+	init(); 
+	glutMainLoop(); 
+	return 0; 
+}
